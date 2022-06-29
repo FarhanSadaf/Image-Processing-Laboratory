@@ -1,0 +1,54 @@
+img = cv2.imread('./period_input.jpg', 0)
+img_h, img_w = img.shape
+
+plt.imshow(img, 'gray')
+plt.title('Input')
+plt.show()
+
+F = np.fft.fft2(img)
+F_shift = np.fft.fftshift(F)
+
+magnitude = np.log(np.abs(F))
+
+plt.imshow(magnitude, 'gray')
+plt.title('Magnitude')
+plt.show()
+
+magnitude_shift = np.log(np.abs(F_shift))
+
+plt.imshow(magnitude_shift, 'gray')
+plt.title('Magnitude after shift')
+plt.show()
+
+filter_butter = np.zeros((img_h, img_w), dtype=np.float32)
+
+n = 2
+d0 = 25
+
+v = [320, 207, 270]
+u = [119, 227, 159]
+
+
+center_i, center_j = img_h//2, img_w//2
+
+for i in range(img_h):
+    for j in range(img_w):
+        prod = 1
+        for k in range(len(v)):
+            duv = np.sqrt((i - center_i - (u[k]-center_i))**2 + (j - center_j - (v[k]-center_j))**2)
+            dmuv = np.sqrt((i - center_i + (u[k]-center_i))**2 + (j - center_j + (v[k]-center_j))**2)
+            prod *= (1 / (1 + (d0 / duv)**(2*n))) * (1 / (1 + (d0 / dmuv)**(2*n)))
+        filter_butter[i, j] = prod
+        
+plt.imshow(filter_butter, 'gray')
+plt.title('Notch filter')
+plt.show()
+
+G_shift = F_shift * filter_butter
+
+G = np.fft.ifftshift(G_shift)
+output = np.fft.ifft2(G).real
+
+plt.imshow(output, 'gray')
+plt.title('Output')
+plt.show()

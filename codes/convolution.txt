@@ -1,0 +1,27 @@
+# Defining kernel
+kernel = np.array([
+    [0, -1, 0],
+    [-1, 4, -1],
+    [0, -1, 0]
+], dtype=np.float32)
+
+kernel_size = len(kernel)
+
+# Defining output image
+output = np.zeros((img_h, img_w), dtype=np.float32)
+
+# Adding border
+n = (kernel_size-1) // 2
+img = cv2.copyMakeBorder(img, n, n, n, n, cv2.BORDER_REPLICATE)
+
+for x in range(img_h):
+    for y in range(img_w):
+        sum_ = 0
+        for i in range(kernel_size):
+            for j in range(kernel_size):
+                sum_ += kernel[i, j] * img[x-n-i, y-n-j]
+        output[x, y] = sum_
+        
+plt.imshow(output, 'gray')
+plt.title('Convolution output')
+plt.show()

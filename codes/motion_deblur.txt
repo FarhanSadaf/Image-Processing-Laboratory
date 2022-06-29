@@ -1,0 +1,68 @@
+f = cv2.imread('./lena.png', 0)
+
+plt.imshow(f, cmap='gray')
+plt.title('Input')
+plt.show()
+
+size = 25
+h = np.zeros((size, size), np.float32)
+
+for i in range(size):
+    for j in range(size):
+        if i == j:
+            h[i, j] = 1
+
+h = h / h.sum()
+
+plt.imshow(h, cmap='gray')
+plt.title('Camera shake')
+plt.show()
+
+pad_ = f.shape[0]//2 - h.shape[0]//2
+h = np.pad(h, (pad_, pad_-1), 'constant', constant_values=(0))
+
+
+plt.imshow(h, cmap='gray')
+plt.title('Padded camera shake')
+plt.show()
+
+F = np.fft.fft2(f)
+H = np.fft.fft2(h)
+
+F_shift = np.fft.fftshift(np.log1p(np.abs(F)))
+H_shift = np.fft.fftshift(np.log1p(np.abs(H)))
+
+plt.imshow(F_shift, cmap='gray')
+plt.title('Fourier Transform of Input')
+plt.show()
+
+plt.imshow(H_shift, cmap='gray')
+plt.title('Fourier Transform of Camera shake')
+plt.show()
+
+# Convolution
+G = F * H
+
+g = np.fft.fftshift(np.fft.ifft2(G).real)
+
+plt.imshow(g, cmap='gray')
+plt.title('Blurred image')
+plt.show()
+
+# Inverse filter
+F_hat = G / H
+
+f_hat = np.fft.ifft2(F_hat).real
+
+plt.imshow(f_hat, cmap='gray')
+plt.title('Deblurred image')
+plt.show()
+
+# Wiener filter
+F_hat = (G / H) * (1 / (1 + (0.0000003 / np.abs(H**2))))
+
+f_hat = np.fft.ifft2(F_hat).real
+
+plt.imshow(f_hat, cmap='gray')
+plt.title('Wiener filer')
+plt.show()

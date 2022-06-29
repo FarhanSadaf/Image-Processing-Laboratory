@@ -1,0 +1,108 @@
+def erlang_dist(x, k, l):
+    return ((l ** k) * (x ** (k-1)) * (math.e ** -(l * x))) / (math.factorial(k-1))
+	
+img = cv2.imread('./lena.png', cv2.IMREAD_GRAYSCALE)
+
+plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+plt.title('Input Image')
+plt.savefig('images/input.png')
+plt.show()
+
+plt.hist(img.ravel(), bins=256, range=(0, 255))
+plt.title('Input Image Histogram')
+plt.savefig('images/input_histogram.png')
+plt.show()
+
+L = 256
+M, N = img.shape[0], img.shape[1]
+
+img_hist = np.zeros(L)
+for i in range(M):
+    for j in range(N):
+        img_hist[img[i, j]] += 1
+
+img_hist = img_hist / (M*N)
+img_hist_cdf = np.zeros(L)
+
+for k in range(L):
+    img_hist_cdf[k] = np.sum(img_hist[:k])  
+    
+sin = (L-1) * img_hist_cdf
+sin = np.round(sin)
+
+result = img.copy()
+for i in range(M):
+    for j in range(N):
+        result[i, j] = sin[result[i, j]]
+		
+plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+plt.title('Histogram Equalized Output')
+plt.show()
+
+plt.hist(result.ravel(), bins=256, range=(0, 255))
+plt.title('Output Image Histogram')
+plt.show()
+
+k, l = 50, 0.7
+
+erlang = [erlang_dist(i, k, l) for i in range(L)]
+
+plt.plot(erlang)
+plt.title('Erlang Distribution')
+plt.savefig('images/erlang.png')
+plt.show()
+
+inpmat = np.array(erlang)
+
+totalnumofpixels = np.sum(inpmat)
+#list for CDF
+#probablity and output matching list    
+probablity = [0 for i in range(L)]
+sout = [0 for i in range(L)]
+cuminpmat = [0 for i in range(L)]
+cuminpmat[0] = inpmat[0]
+
+probablity[0] = (cuminpmat[0] / totalnumofpixels) * 255
+sout[0] = round(probablity[0])
+
+for i in range(1, L):
+    cuminpmat[i] = inpmat[i] + cuminpmat[i-1]
+    probablity[i] = (cuminpmat[i]) * (L-1)
+    sout[i] = round(probablity[i])
+	
+def get_closest_index(sout, matchedInput):
+    for i in range(1, 255):
+        if matchedInput == sout[i]:
+            return i
+        elif matchedInput < sout[i]:
+            if abs(matchedInput - sout[i]) < abs(matchedInput - sout[i-1]):
+                return i
+            else:
+                return i-1
+        
+        
+def histogram_matching(img, sin, sout):
+    out = np.zeros([img.shape[0], img.shape[1]], "uint8")
+    
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            intensity = img.item(i,j)
+            matchedInput = sin[intensity]
+            
+            outputIndex = get_closest_index(sout, matchedInput)
+            
+            out.itemset((i,j), outputIndex)
+    
+    return out
+	
+result = histogram_matching(img, sin, sout)
+
+plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+plt.title('Histogram Matched Output')
+plt.savefig('images/output.png')
+plt.show()
+
+plt.hist(result.ravel(), bins=256, range=(0, 255))
+plt.title('Output Image Histogram')
+plt.savefig('images/output_histogram.png')
+plt.show()

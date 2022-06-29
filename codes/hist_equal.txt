@@ -1,0 +1,45 @@
+img = cv2.imread('./lena.png', 0)
+img_h, img_w = img.shape
+
+plt.imshow(img, 'gray')
+plt.title('Input')
+plt.show()
+
+plt.hist(img.ravel(), bins=256, range=(0, 255))
+plt.show()
+
+L = 256
+M, N = img_h, img_w
+
+n_k = np.zeros(L)
+
+for i in range(M):
+    for j in range(N):
+        n_k[img[i, j]] += 1
+        
+plt.plot(n_k)
+plt.show()
+
+p_r = n_k / (M*N)
+
+cdf = np.zeros(L)
+
+for k in range(L):
+    cdf[k] = np.sum(p_r[:k])
+    
+s_k = (L-1) * cdf
+
+transformation = np.round(s_k)
+
+output = np.zeros((img_h, img_w), dtype=np.uint8)
+
+for i in range(img_h):
+    for j in range(img_w):
+        output[i, j] = transformation[img[i, j]]
+        
+plt.imshow(output, 'gray')
+plt.title('Histogram equalized output')
+plt.show()
+
+plt.hist(output.ravel(), bins=256, range=(0, 255))
+plt.show()

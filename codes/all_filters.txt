@@ -1,0 +1,72 @@
+def get_mean_kernel(kernel_size=5):
+    kernel = np.ones((kernel_size, kernel_size), dtype=np.float32)
+    return kernel / kernel.sum()
+	
+def get_gaussian_kernel(kernel_size=5, sigma=1):
+    kernel = np.zeros((kernel_size, kernel_size), dtype=np.float32)
+    mid = kernel_size // 2
+    for x in range(-mid, mid+1):
+        for y in range(-mid, mid+1):
+            kernel[x+mid, y+mid] = (1 / (2 * np.pi * sigma**2)) * np.exp(- (x**2 + y**2) / (2 * sigma**2))
+    return kernel
+	
+kernel_laplacian_neg = np.array([
+    [1,  0, 1],
+    [0, -4, 0],
+    [1,  0, 1]
+])
+
+kernel_laplacian_pos = np.array([
+    [-1, 0, -1],
+    [ 0, 4,  0],
+    [-1, 0, -1]
+])
+
+kernel_sobel_x = np.array([
+    [1, 0, -1],
+    [2, 0, -2],
+    [1, 0, -1]
+])
+
+
+kernel_sobel_y = np.array([
+    [ 1,  2,  1],
+    [ 0,  0,  0],
+    [-1, -2, -1]
+])
+
+kernel_prewitt_x = np.array([
+    [1, 0, -1],
+    [1, 0, -1],
+    [1, 0, -1]
+])
+
+kernel_prewitt_y = np.array([
+    [ 1,  1,  1],
+    [ 0,  0,  0],
+    [-1, -1, -1]
+])
+
+kernel_scharr_x = np.array([
+    [ 3, 0,  -3],
+    [10, 0, -10],
+    [ 3, 0,  -3]
+])
+
+
+kernel_scharr_y = np.array([
+    [ 3, 10,  3],
+    [ 0,  0,  0],
+    [-3,-10, -3]
+])
+
+
+kernel_robert_x = np.array([
+    [1,  0],
+    [0, -1],
+])
+
+kernel_robert_y = np.array([
+    [ 0, 1],
+    [-1, 0],
+])

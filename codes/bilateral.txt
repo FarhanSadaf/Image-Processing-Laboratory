@@ -1,0 +1,45 @@
+def get_gaussian_kernel(kernel_size=5, sigma=1):
+    '''
+    Space filter
+    '''
+    kernel = np.zeros((kernel_size, kernel_size), dtype=np.float32)
+    mid = kernel_size // 2
+    
+    for x in range(-mid, mid+1):
+        for y in range(-mid, mid+1):
+            kernel[x+mid, y+mid] = (1 / (2 * np.pi * sigma**2)) * np.exp(- (x**2 + y**2) / (2 * sigma**2))
+            
+    return kernel
+	
+def get_range_filter(img, x, y, kernel_size=5, sigma=1):
+    kernel = np.zeros((kernel_size, kernel_size), dtype=np.float32)
+    mid = kernel_size // 2
+    
+    for i in range(-mid, mid+1):
+        for j in range(-mid, mid+1):
+            kernel[i+mid, j+mid] = (1 / (2 * np.pi * sigma**2)) * np.exp(- (img[x, y] - img[x+i, y+j])**2 / (2 * sigma**2))
+            
+    return kernel
+	
+kernel_size = 5
+kernel_gaussian = get_gaussian_kernel(kernel_size=kernel_size)
+
+output = np.zeros((img_h, img_w), dtype=np.float32)
+
+n = (kernel_size-1) // 2
+img = cv2.copyMakeBorder(img, n, n, n, n, cv2.BORDER_REPLICATE)
+
+for x in range(img_w):
+    for y in range(img_h):
+        # Bilateral kernel
+        kernel = kernel_gaussian * get_range_filter(img, x, y, kernel_size=kernel_size)
+        
+        sum_ = 0
+        for i in range(kernel_size):
+            for j in range(kernel_size):
+                sum_ += kernel[i, j] * img[x-n-i, y-n-j]  
+        output[x, y] = sum_ / kernel.sum()
+        
+plt.imshow(output, 'gray')
+plt.title('Bilateral output')
+plt.show()
